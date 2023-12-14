@@ -1,8 +1,8 @@
 # run this for everything to work.
-from days import utils, day1, day2, day4
+from days import utils, day1, day2, day4, day6, day7
 
 while(True):
-    # agu recomendations: 6 7 9 10 11
+    # agu recomendations: 9 10 11
     res = input("choose a day to solve (01-25) or \"exit\": ")
 
     def print_solutions(s1, s2):
@@ -27,10 +27,12 @@ while(True):
         print("unimplemented")
 
     elif res == '06':
-        print("unimplemented")
+        t, d = utils.read_input(res)
+        print_solutions(day6.part1(t,d), day6.part2(t,d))
 
     elif res == '07':
-        print("unimplemented")
+        lines = utils.read_input(res)
+        print_solutions(day7.part1(lines), day7.part2(lines))
 
     elif res == '08':
         print("unimplemented")
