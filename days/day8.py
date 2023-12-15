@@ -12,18 +12,22 @@ def calculate_next_sequence(sequence: list[int]):
         res.append(n)
     return res
 
-def calculate_next_value_for_sequences(sequences: list[list[int]]):
+def calculate_next_value_for_sequences(sequences: list[list[int]], initial=False):
     inverse = list(reversed(sequences))
     next_val_seqs = [0]
     for i in range(1, len(inverse)):
         j = i-1
         a = next_val_seqs[j]
-        b = inverse[i][-1]
-        next_val_seqs.append(a+b)
+        if(initial):
+            b = b = inverse[i][0]
+            next_val_seqs.append(b-a)
+        else:
+            b = inverse[i][-1]
+            next_val_seqs.append(a+b)
     
     return next_val_seqs
 
-def part1(lines):
+def solver(lines, initial=False):
     res = []
     for line in lines:
         seqs = []
@@ -35,11 +39,14 @@ def part1(lines):
             if sum(seq) == 0:
                 break
         
-        inversed_next_val_seqs = calculate_next_value_for_sequences(seqs)
+        inversed_next_val_seqs = calculate_next_value_for_sequences(seqs, initial)
         next_main_seq_val = list(reversed(inversed_next_val_seqs))[0]
         res.append(next_main_seq_val)
 
     return sum(res)
+
+def part1(lines):
+    return solver(lines)
     
 def part2(lines):
-    return 0
+    return solver(lines, initial=True)
