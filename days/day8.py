@@ -1,52 +1,63 @@
-def parse_line(line: str):
-    res=[]
-    for v in line.split():
-        res.append(int(v))
-    return res
+def parse_mapping(lines):
+    res = dict()
+    for i in range(2, len(lines)):
+        node, link = lines[i].split("=")
+        L, R = link.split(",")
+        res[node.strip()] = {'L':L.strip().replace("(", ""), 'R':R.strip().replace(")", "")}
 
-def calculate_next_sequence(sequence: list[int]):
-    res = []
-    for i in range(1, len(sequence)):
-        j = i-1
-        n = sequence[i]-sequence[j]
-        res.append(n)
-    return res
-
-def calculate_next_value_for_sequences(sequences: list[list[int]], initial=False):
-    inverse = list(reversed(sequences))
-    next_val_seqs = [0]
-    for i in range(1, len(inverse)):
-        j = i-1
-        a = next_val_seqs[j]
-        if(initial):
-            b = b = inverse[i][0]
-            next_val_seqs.append(b-a)
-        else:
-            b = inverse[i][-1]
-            next_val_seqs.append(a+b)
-    
-    return next_val_seqs
-
-def solver(lines, initial=False):
-    res = []
-    for line in lines:
-        seqs = []
-        seq = parse_line(line)
-        seqs.append(seq)
-        while(True):
-            seq = calculate_next_sequence(seq)
-            seqs.append(seq)
-            if sum(seq) == 0:
-                break
-        
-        inversed_next_val_seqs = calculate_next_value_for_sequences(seqs, initial)
-        next_main_seq_val = list(reversed(inversed_next_val_seqs))[0]
-        res.append(next_main_seq_val)
-
-    return sum(res)
+    return lines[0], res
 
 def part1(lines):
-    return solver(lines)
+    instructions, mapping = parse_mapping(lines)
+    steps, idx = 0, 0
+    position = "AAA"
+    while(True):
+        if idx == len(instructions):
+            idx = 0
+
+        step = instructions[idx]
+        position = mapping[position][step]
+        steps += 1
+        if(position=='ZZZ'):
+            break
+
+        idx += 1
+
+    return steps
+
+
     
 def part2(lines):
-    return solver(lines, initial=True)
+    from math import gcd
+    from tqdm import tqdm
+
+    instructions, mapping = parse_mapping(lines)
+    positions = []
+
+    for p in mapping.keys():
+        if p.endswith('A'):
+            positions.append(p)
+
+    steps_cum = []
+    for p in positions:
+        steps, idx = 0, 0
+        while(True):
+            if idx == len(instructions):
+                idx = 0
+
+            step = instructions[idx]
+            p = mapping[p][step]
+            steps += 1
+
+            if p[2] == 'Z':
+                break
+
+            idx += 1
+
+        steps_cum.append(steps)
+
+    lcm = 1
+    for i in tqdm(steps_cum):
+        lcm = lcm*i//gcd(lcm, i)
+
+    return lcm
