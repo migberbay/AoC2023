@@ -25,8 +25,6 @@ def part1(lines):
 
     return steps
 
-
-    
 def part2(lines):
     from math import gcd
     from tqdm import tqdm
