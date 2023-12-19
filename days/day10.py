@@ -1,170 +1,116 @@
-def parse_labyrinth(lines: list[str]):
+def parse_labyrinth(lines):
     for i, l in enumerate(lines):
         if 'S' in l:
             j = l.index('S')
             break
-    start_pos = (i, j) #128,36
+    
+    #state
+    pos, initial_pos, prev_pos = (i,j), (i,j), (i,j)
+    mapping = {}
 
-    assert lines[start_pos[0]][start_pos[1]] == 'S'
+    s = get_moves_from_position(initial_pos, lines, 'S')
+    mapping[pos] = s
 
-    # we map from S the start node to {up:#, down:#, left:#, right:#}
-    # where the # are indexes of nodes (so we can track which nodes we have visited already)
-    # node indexes are the concatenation of the coordinates they belong to, with 0 padding to make a 3 digit number for each
-    # we stop mapping when we reach the initial node again (circle complete)
-    # S is the only special case, we manually define it and then proceed with automatic nodes.
-    # -1 indicates the node in that direction is not accesible.
+    i_pipe = get_starting_pipe(s)
+    lines[i] = lines[i].replace('S', i_pipe)
+    
+    for x in mapping[pos].values():
+        if(x != -1):
+            pos = x
+            break
 
-    s_index = pos_to_index(start_pos) # 128036 or 001001
-
-    # TODO: Correct this initial mapping.
-    # mapping = {s_index: {'up':-1, 'down':'129037', 'left':-1, 'right':'127037'}}
-    # current_pos, prev_pos, last_move, pipe_taken = (129,37), start_pos, 'down', 'L'
-
-    mapping = {s_index: {'up':-1, 'down':'002001', 'left':-1, 'right':'001002'}}
-    current_pos, prev_pos, last_move, pipe_taken = (2,1), start_pos, 'down', '|'
-
-    def calculate_new_state(pos_change, move_name):
-        dir_pos = (current_pos[0] + pos_change[0], current_pos[1] + pos_change[1])
-        try:
-            pipe_type = lines[dir_pos[0]][dir_pos[1]]
-        except:
-            # move is out of bounds (considered impossible.)
-            move = -1
-        else:
-            move = apply_pipe_to_pos(move_name, pipe_type)
-
-        if(move != -1):
-            # there should only be one possible move,
-            # so we update the position and staate variables if we find a non -1 move.
-            prev_pos = current_pos
-            nonlocal new_pos, last_move, pipe_taken
-            new_pos = (current_pos[0] + move[0], current_pos[1] + move[1])
-            last_move = move_name
-            pipe_taken = pipe_type
-            s_curr[move_name] = pos_to_index(new_pos)
-        else:
-            s_curr[move_name] = -1
-
-    state = {'up':'', 'down':'', 'left':'', 'right':''}
+    curr_pipe = lines[pos[0]][pos[1]]
 
     while(True):
-        if(current_pos == start_pos): # reached initial node, all mapped.
+        s = get_moves_from_position(pos, lines, curr_pipe)
+        mapping[pos] = s
+        opts = [x for x in s.values() if x != -1]
+        try:
+            opts.remove(prev_pos)
+        except:
+            print(f"{prev_pos}, not in {opts}")
+        prev_pos = pos
+        pos = opts[0]
+        curr_pipe = lines[pos[0]][pos[1]]
+        if pos == initial_pos:
             break
-        
-        s_curr = state.copy()
-        return_move =  get_return_move(last_move, pipe_taken)
-        s_curr[return_move] = pos_to_index(prev_pos)
-        
-        new_pos = -1
-        if return_move != 'up':
-            calculate_new_state((-1,0),'up')
-            
-        if return_move != 'down':
-            calculate_new_state((1,0),'down')
 
-        if return_move != 'left':
-            calculate_new_state((0,-1),'left')
+    return initial_pos, mapping
 
-        if return_move != 'right':
-            calculate_new_state((0,1),'right')
-            
-        if(new_pos != -1):
-            mapping[pos_to_index(current_pos)] = s_curr
-            current_pos = new_pos
-
-    return s_index, mapping
-
-def pos_to_index(pos):
-    return f"{str(pos[0]).zfill(3)}{str(pos[1]).zfill(3)}"
-
-def get_return_move(prev_move, prev_pipe):
-    ''' 
-    Given the previous move made and the pipe taken, provides the move needed to return to that position.
-    '''
-    if prev_pipe == '|':
-        if prev_move == 'up':
-            return 'down'
-        if prev_move == 'down':
-            return 'up'    
-
-    if prev_pipe == '-':
-        if prev_move == 'left':
-            return 'right'  
-        if prev_move == 'right':
-            return 'left'  
-
-    if prev_pipe == 'L':
-        if prev_move == 'down':
-            return 'left'  
-        if prev_move == 'left':
-            return 'down' 
+def get_starting_pipe(initial_pos_state):
+    dirs = ['up', 'down', 'left', 'right']
+    idxs = [i for i, x in enumerate(initial_pos_state.values()) if x == -1]
+    non_valid = set([dirs[i] for i in idxs])
+    v = set(dirs)-non_valid
     
-    if prev_pipe == 'J':
-        if prev_move == 'down':
-            return 'right'  
-        if prev_move == 'right':
-            return 'down'  
-    
-    if prev_pipe == '7':
-        if prev_move == 'up':
-            return 'right'  
-        if prev_move == 'right':
-            return 'up'  
-    
-    if prev_pipe == 'F':
-        if prev_move == 'up':
-            return 'left'
-        if prev_move == 'left':
-            return 'up'
+    if len(v.intersection({'down', 'up'})) == 2:
+        return'|'
 
-def apply_pipe_to_pos(orientation, pipe_type):
-    if pipe_type == '|':
-        if orientation == 'down':
-            return (1, 0)
-        if orientation == 'up':
-            return (-1, 0)
-        
-
-    if pipe_type == '-':
-        if orientation == 'left':
-            return (0, -1)
-        if orientation == 'right':
-            return (0, 1)
-        
-
-    if pipe_type == 'L':
-        if orientation == 'down':
-            return (1, 0)
-        if orientation == 'left':
-            return (0, -1)
-        
+    if len(v.intersection({'left', 'right'})) == 2:
+        return'-'
     
-    if pipe_type == 'J':
-        if orientation == 'down':
-            return (1, 0)
-        if orientation == 'right':
-            return (0, 1)
-        
-    
-    if pipe_type == '7':
-        if orientation == 'up':
-            return (-1, 0)
-        if orientation == 'right':
-            return (0, 1)
-        
-    
-    if pipe_type == 'F':
-        if orientation == 'up':
-            return (-1, 0)
-        if orientation == 'left':
-            return (0, -1)
+    if len(v.intersection({'right', 'up'})) == 2:
+        return'L'
 
-    return -1
+    if len(v.intersection({'left', 'up'})) == 2:
+        return'J'
+
+    if len(v.intersection({'left', 'down'})) == 2:
+        return'7'
+
+    if len(v.intersection({'right', 'down'})) == 2: 
+        return'F'
+
+def get_moves_from_position(pos, lines, curr_pipe):
+    ordered_pos = ['up', 'down', 'left', 'right']
+    state = dict.fromkeys(ordered_pos, -1)
+
+    up = (pos[0]-1, pos[1])
+    down = (pos[0]+1, pos[1])
+    left = (pos[0], pos[1]-1)
+    right = (pos[0], pos[1]+1)
+
+    for i, c in enumerate([up, down, left, right]):
+        try:
+            pipe = lines[c[0]][c[1]]
+        except:
+            continue
+
+        if i == 0 and pipe in {'|', '7', 'F'} and curr_pipe in {'S', '|', 'L', 'J'}: #up
+            state[ordered_pos[i]] = up
+
+        elif i == 1 and pipe in {'|', 'L', 'J'} and curr_pipe in {'S', '|', '7', 'F'}: #down
+            state[ordered_pos[i]] = down
+
+        elif i == 2 and pipe in {'-', 'F', 'L'} and curr_pipe in {'S', '-', 'J', '7'}: #left  
+            state[ordered_pos[i]] = left
+
+        elif i == 3 and pipe in {'-', 'J', '7'} and curr_pipe in {'S', '-', 'F', 'L'}: #right
+            state[ordered_pos[i]] = right
+
+    return state
 
 def part1(lines):
-    start_index, mapping = parse_labyrinth(lines)
-    print(start_index, mapping)
-    return 0
+    initial_pos, mapping = parse_labyrinth(lines)
+    prev_pos = [initial_pos, initial_pos]
+    positions = [x for x in mapping[initial_pos].values() if x != -1]
+    step_count = 1
+
+    while(True):
+        step_count += 1
+        next_pos = []
+        for i, pos in enumerate(positions):
+            pp = prev_pos[i]
+            valids = [i for i in list(mapping[pos].values()) if i != -1]
+            valids.remove(pp)
+            next_pos.append(valids[0])
+            prev_pos[i] = positions[i]
+
+        positions = next_pos
+        if(positions[0] == positions[1]):
+            break
+
+    return step_count
     
 def part2(lines):
     return 0

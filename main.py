@@ -2,7 +2,7 @@
 from days import utils, day1, day2, day4, day6, day7, day8, day9, day10
 
 while(True):
-    # agu recomendations: 10 11
+    # agu recomendations: 11
     res = input("choose a day to solve (01-25) or \"exit\": ")
 
     def print_solutions(s1, s2):
@@ -43,6 +43,8 @@ while(True):
         print_solutions(day9.part1(lines), day9.part2(lines))
 
     elif res == '10':
+        # print("unimplemented")
+
         lines = utils.read_input(res)
         print_solutions(day10.part1(lines), day10.part2(lines))
 
