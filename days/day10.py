@@ -112,5 +112,99 @@ def part1(lines):
 
     return step_count
     
+
+def raycast_left_to_right(line):
+    res = 0
+    
+    current_segment = []
+    segment_starters = {'L','F'}
+    segment_stoppers = {'J', '7'}
+
+    inside = False
+    first_segment = True
+    
+    for tile in line:
+        seg_len = len(current_segment)
+
+        if(tile in segment_starters or tile in {'-', '|'}):
+            current_segment.append(tile)
+            continue
+
+        if(tile in segment_stoppers):
+            starter = 'L' if 'L' in current_segment else 'F'
+            stopper = tile
+            if(first_segment):
+                if(starter == 'L'):
+                    if(stopper == '7'):
+                        inside = True
+                    elif(stopper == 'J'):
+                        inside = False
+
+                elif(starter == 'F'):
+                    if(stopper == '7'):
+                        inside = False
+                    elif(stopper == 'J'):
+                        inside = True
+
+                first_segment = False
+            else:
+                if((starter == 'L' and stopper == '7') or 
+                (starter == 'F' and stopper == 'J')):
+                    inside = not inside
+                   
+            a = current_segment.count('|')
+            if(a%2 != 0):
+                inside = not inside
+
+            current_segment=[]
+            continue
+        
+        if(tile == '.'):
+            css = set(current_segment)
+            if len(css) == 1 and list(css)[0] == '|':
+                if len(current_segment)%2 != 0:
+                    inside = not inside
+
+            current_segment=[]
+
+            if(inside):
+                res += 1
+
+    return res
+
 def part2(lines):
-    return 0
+    import pprint
+    pretty = pprint.PrettyPrinter()
+
+    h, w =len(lines), len(lines[0])
+    clean = [['.']*w for i in range(h)]
+        
+    initial_pos, mapping = parse_labyrinth(lines)
+    prev_pos = [initial_pos, initial_pos]
+    positions = [x for x in mapping[initial_pos].values() if x != -1]
+    
+    while(True):
+        next_pos = []
+        for i, pos in enumerate(positions):
+            pp = prev_pos[i]
+            valids = [i for i in list(mapping[pos].values()) if i != -1]
+            valids.remove(pp)
+            next_pos.append(valids[0])
+            prev_pos[i] = positions[i]
+
+        positions = next_pos
+        if(positions[0] == positions[1]):
+            break
+
+    for k in mapping.keys():
+        clean[k[0]][k[1]] = lines[k[0]][k[1]]
+        # clean[k[0]][k[1]] = '1'
+
+    clean_str = [''.join(c) for c in clean]
+    pretty.pprint(clean_str)
+
+    res = 0
+    for line in clean:
+        res += raycast_left_to_right(line)
+
+    return res
