@@ -132,6 +132,7 @@ def raycast_left_to_right(line):
 
         if(tile in segment_stoppers):
             starter = 'L' if 'L' in current_segment else 'F'
+            # starter = current_segment[0]
             stopper = tile
             if(first_segment):
                 if(starter == 'L'):
