@@ -5,10 +5,9 @@ def parse_line(line):
     occurs = occurrs.split(',')
     occurs = [int(i) for i in occurs]
 
-    return [*line], idx, occurs
+    return arrange, idx, occurs
 
 def check_validity_of_state(state, contiguous_damaged):
-    valid = True
     for size in contiguous_damaged:
         i = 0 
         j=i+size
@@ -17,21 +16,24 @@ def check_validity_of_state(state, contiguous_damaged):
         while j < len(state): 
             sublist = state[i:j]
             a = ''.join(sublist)
-            a.replace('?', '#')
+            a = a.replace('?', '#')
             a = [*a]
             a = set(a)
 
             if(len(a) == 1 and list(a)[0] == '#'):
                 # check if prev or next values of state are #
                 c1,c2 = False, False
-                try:
+
+                if(i-1 > 0):
                     c1 = state[i-1] != '#'
-                except: pass
-                try:
+                else: c1 = True
+
+                if(j+1 < len(state)):
                     c2 = state[j+1] != '#'
-                except: pass
+                else: c2 = True
 
                 found_valid = c1 and c2
+
                 if found_valid: break
         
             i, j = i+1, j+1
@@ -40,10 +42,15 @@ def check_validity_of_state(state, contiguous_damaged):
             indices = range(i,j)
 
             # remove elements replaced for the state:
-            state = [x for i, x in enumerate(state) if i in indices]
+            for i in range(i,j):
+                state[i] = '.'
+        
+        else:
+            return False
+    
+    return True
 
-            # we introduce '.' as a separator where we made cuts for the windows.
-            state.insert(i,'.')
+
         
 def calculate_next_states(state, unknown_idx, contiguous_damages):
     first_unknown = unknown_idx.pop(0)
