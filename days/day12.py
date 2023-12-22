@@ -1,3 +1,5 @@
+from itertools import groupby
+
 def parse_line(line):
     arrange, occurrs = line.split(' ')
     arrange = [*arrange]
@@ -8,6 +10,17 @@ def parse_line(line):
     return arrange, idx, occurs
 
 def check_validity_of_state(state, contiguous_damaged):
+    # pre check for first match (auto discards a bunch I assume.)
+    # aux = state.split('.')
+    aux = [list(group) for k, group in groupby(state, lambda x: x == ".") if not k]
+    for i in contiguous_damaged:
+        # TODO: HERE WE CHECK THE GROUPS OF DAMAGED ELEMENTS THAT
+        # DO NOT MATCH IN SIZE WITH THE CONTIGUOUS DAMAGED LIST, 
+        # IF WE FIND OUT OF ORDER ELEMENTS (the only current mistake)
+        # we return false, otherwise, we continue.
+        if len(aux[i]) == contiguous_damaged[i]:
+            pass
+
     replaced_in_state = set()
     for size in contiguous_damaged:
         i = 0 
@@ -26,7 +39,7 @@ def check_validity_of_state(state, contiguous_damaged):
                 # check if prev or next values of state are #
                 c1,c2,c3 = False, False, False
 
-                if(i-1 > 0):
+                if(i-1 >= 0):
                     c1 = state[i-1] != '#'
                 else: c1 = True
 
@@ -90,7 +103,8 @@ def get_possible_arrangements(line):
 def part1(lines):
     for line in lines:
         arrangements = get_possible_arrangements(line)
-        print(line, len(arrangements))
+        print(len(arrangements))
+        print(arrangements)
         print('\n\n')
 
     return 0
