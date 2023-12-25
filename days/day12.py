@@ -10,17 +10,27 @@ def parse_line(line):
     return arrange, idx, occurs
 
 def check_validity_of_state(state, contiguous_damaged):
-    # pre check for first match (auto discards a bunch I assume.)
-    # aux = state.split('.')
-    aux = [list(group) for k, group in groupby(state, lambda x: x == ".") if not k]
-    for i in contiguous_damaged:
-        # TODO: HERE WE CHECK THE GROUPS OF DAMAGED ELEMENTS THAT
-        # DO NOT MATCH IN SIZE WITH THE CONTIGUOUS DAMAGED LIST, 
-        # IF WE FIND OUT OF ORDER ELEMENTS (the only current mistake)
-        # we return false, otherwise, we continue.
-        if len(aux[i]) == contiguous_damaged[i]:
-            pass
+    
+    # pre check for already a valid state with all ? as .
+    test1 = ''.join(state).replace('?', '.')
+    test1 = [*test1]
+    aux = [len(list(group)) for k, group in groupby(test1, lambda x: x == "." or x =='?') if not k]
+    if(aux == contiguous_damaged):
+        return True
 
+    # pre check for '##' groups formed already that are larger than the possible groups in order.
+    aux = [list(group) for k, group in groupby(state, lambda x: x == ".") if not k]
+    for i, d in enumerate(contiguous_damaged):
+        try:
+            if len(aux[i]) > d:
+                if('?' in aux[i]):
+                    break
+
+                return False
+        except:
+            break
+    
+    # main window testing discard
     replaced_in_state = set()
     for size in contiguous_damaged:
         i = 0 
@@ -55,17 +65,19 @@ def check_validity_of_state(state, contiguous_damaged):
         
             i, j = i+1, j+1
         
+
         if(found_valid):
-            indices = range(i,j)
+            indices = list(range(i,j))
             replaced_in_state.update(indices)
             # replace elements in state with #:
             for i in range(i,j):
                 state[i] = '#'
-            
         else:
             return False
     
-    return True
+    # post check for modified state to make absolutely sure this is correct.
+    aux = [len(list(group)) for k, group in groupby(state, lambda x: x == "." or x =='?') if not k]
+    return (aux == contiguous_damaged)
         
 def calculate_next_states(state, unknown_idx, contiguous_damages):
     first_unknown = unknown_idx.pop(0)
@@ -83,7 +95,7 @@ def calculate_next_states(state, unknown_idx, contiguous_damages):
 
 def get_possible_arrangements(line):
     state, unknown_idx, contiguous_damages = parse_line(line)
-    print(state, unknown_idx, contiguous_damages)
+    # print(state, unknown_idx, contiguous_damages)
     states = [state]
     # branch and bound:
     while(True):
@@ -100,14 +112,50 @@ def get_possible_arrangements(line):
 
     return states
 
-def part1(lines):
-    for line in lines:
-        arrangements = get_possible_arrangements(line)
-        print(len(arrangements))
-        print(arrangements)
-        print('\n\n')
+# I TRIED BRANCH AND BOUND ABOVE AND DID AN ABSOLUTE MESS
+# IT IS WAY BETTER JUST TO DO FUCKING CHACHES FOR EVERY PARTIAL RESULT.
+# this is called memoization and it is how fibonacci is calculated
+from functools import cache
 
-    return 0
+@cache
+def count_arrangements(conditions, rules):
+    if not rules:
+        return 0 if "#" in conditions else 1
+    if not conditions:
+        return 1 if not rules else 0
+
+    result = 0
+
+    if conditions[0] in ".?":
+        result += count_arrangements(conditions[1:], rules)
+        
+    if conditions[0] in "#?":
+        if (
+            rules[0] <= len(conditions)
+            and "." not in conditions[: rules[0]]
+            and (rules[0] == len(conditions) or conditions[rules[0]] != "#")
+        ):
+            result += count_arrangements(conditions[rules[0] + 1 :], rules[1:])
+
+    return result
+
+def part1(lines):
+    res = 0
+    for line in lines:
+        conditions, rules = line.split()
+        rules = eval(rules)
+        res += count_arrangements(conditions, rules)
+
+    return res
 
 def part2(lines):
-    return 0
+    res = 0
+    for line in lines:
+        conditions, rules = line.split()
+        rules = eval(rules)
+        conditions = "?".join([conditions] * 5)
+        rules = rules * 5
+
+        res += count_arrangements(conditions, rules)
+
+    return res
