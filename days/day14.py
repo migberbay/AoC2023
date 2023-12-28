@@ -122,6 +122,6 @@ def part2(lines):
     loopable = 1000000000 - initial_loop_pos
 
     res_pos_in_loop = loopable % len(loop)
-    res = load_on_support_beam(eval(f"[{loop[res_pos_in_loop+1]}]"))
+    res = load_on_support_beam(eval(f"[{loop[res_pos_in_loop-1]}]"))
 
     return res

@@ -1,5 +1,5 @@
 # run this for everything to work.
-from days import utils, day1, day2, day4, day6, day7, day8, day9, day10, day12, day14
+from days import utils, day1, day2, day4, day6, day7, day8, day9, day10, day12, day14, day15
 
 while(True):
     # agu recomendations: 14 15(?) 16 17 18(obscure math) 19 20(no)
@@ -62,7 +62,8 @@ while(True):
         print_solutions(day14.part1(lines), day14.part2(lines))
 
     elif res == '15':
-        print("unimplemented")
+        lines = utils.read_input(res)
+        print_solutions(day15.part1(lines), day15.part2(lines))
 
     elif res == '16':
         print("unimplemented")
